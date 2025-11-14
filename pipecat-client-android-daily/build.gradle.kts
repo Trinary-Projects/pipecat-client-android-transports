@@ -1,10 +1,10 @@
 val libraryVersion = "1.0.3"
 
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.jetbrains.kotlin.serialization)
-    alias(libs.plugins.jetbrains.dokka)
+    id("com.android.library") version "8.7.3"
+    id("org.jetbrains.kotlin.android") version "2.1.0"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
+    id("org.jetbrains.dokka") version "1.9.20"
     `maven-publish`
     signing
 }
@@ -48,15 +48,15 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.kotlinx.serialization.json)
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
 
-    api(libs.daily.android.client)
-    api(libs.pipecat.client)
+    api("co.daily:client:0.35.0")
+    implementation(project(":pipecat-client"))
 
-    androidTestImplementation(libs.androidx.runner)
-    androidTestImplementation(libs.androidx.rules)
-    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation("androidx.test:runner:1.6.1")
+    androidTestImplementation("androidx.test:rules:1.6.1")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 }
 
 publishing {

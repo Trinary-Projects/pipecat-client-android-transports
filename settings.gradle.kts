@@ -25,3 +25,7 @@ include(":pipecat-client-android-daily")
 include(":pipecat-client-android-gemini-live-websocket")
 include(":pipecat-client-android-openai-realtime-webrtc")
 include(":pipecat-client-android-small-webrtc-transport")
+
+// Include local Pipecat libraries
+include(":pipecat-client")
+project(":pipecat-client").projectDir = file("/Users/manasvi/Desktop/pipecat-clients/pipecat-client-android/pipecat-client-android")

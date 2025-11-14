@@ -1,5 +1,6 @@
 plugins {
-    alias(libs.plugins.android.library) apply false
-    alias(libs.plugins.jetbrains.kotlin.android) apply false
-    alias(libs.plugins.jetbrains.dokka) apply true
+    id("com.android.library") version "8.7.3" apply false
+    id("org.jetbrains.kotlin.android") version "2.1.0" apply false
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0" apply false
+    id("org.jetbrains.dokka") version "1.9.20" apply true
 }

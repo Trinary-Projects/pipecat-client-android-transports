@@ -14,6 +14,13 @@ import ai.pipecat.client.types.MediaDeviceInfo
 import ai.pipecat.client.types.Participant
 import ai.pipecat.client.types.ParticipantId
 import ai.pipecat.client.types.ParticipantTracks
+import ai.pipecat.client.types.RTVINetworkConnectionEventType
+import ai.pipecat.client.types.RTVINetworkConnectionStatusUpdate
+import ai.pipecat.client.types.RTVINetworkConnectionType
+import ai.pipecat.client.types.RTVIDetailedNetworkStats
+import ai.pipecat.client.types.RTVILatestStatistics
+import ai.pipecat.client.types.RTVINetworkStats
+import ai.pipecat.client.types.RTVINetworkThreshold
 import ai.pipecat.client.types.Tracks
 import ai.pipecat.client.types.TransportState
 import ai.pipecat.client.utils.ThreadRef
@@ -25,8 +32,15 @@ import co.daily.CallClientListener
 import co.daily.model.CallState
 import co.daily.model.MediaState
 import co.daily.model.MeetingToken
+import co.daily.model.NetworkConnectionEventType
+import co.daily.model.NetworkConnectionStatusUpdate
+import co.daily.model.NetworkConnectionType
+import co.daily.model.DetailedNetworkStats
+import co.daily.model.LatestStats
+import co.daily.model.NetworkStats
 import co.daily.model.ParticipantLeftReason
 import co.daily.model.Recipient
+import co.daily.model.Threshold
 import co.daily.settings.CameraInputSettingsUpdate
 import co.daily.settings.FacingMode
 import co.daily.settings.FacingModeUpdate
@@ -213,6 +227,43 @@ class DailyTransport(
             transportContext.callbacks.onInputsUpdated(
                 camera = inputSettings.camera.isEnabled,
                 mic = inputSettings.microphone.isEnabled
+            )
+        }
+
+        override fun onNetworkStatsUpdated(newNetworkStatistics: NetworkStats) {
+            transportContext.callbacks.onNetworkStatsUpdated(
+                RTVINetworkStats(
+                    quality = newNetworkStatistics.quality,
+                    threshold = when (newNetworkStatistics.threshold) {
+                        Threshold.Good -> RTVINetworkThreshold.Good
+                        Threshold.Low -> RTVINetworkThreshold.Low
+                        Threshold.VeryLow -> RTVINetworkThreshold.VeryLow
+                    },
+                    previousThreshold = newNetworkStatistics.previousThreshold?.let { prevThreshold ->
+                        when (prevThreshold) {
+                            Threshold.Good -> RTVINetworkThreshold.Good
+                            Threshold.Low -> RTVINetworkThreshold.Low
+                            Threshold.VeryLow -> RTVINetworkThreshold.VeryLow
+                        }
+                    },
+                    stats = newNetworkStatistics.stats.toRtvi()
+                )
+            )
+        }
+
+        override fun onNetworkConnectionStatusUpdated(status: NetworkConnectionStatusUpdate) {
+            transportContext.callbacks.onNetworkConnectionStatusUpdated(
+                RTVINetworkConnectionStatusUpdate(
+                    connection = when (status.connection) {
+                        NetworkConnectionType.signalling -> RTVINetworkConnectionType.signalling
+                        NetworkConnectionType.recvTransport -> RTVINetworkConnectionType.recvTransport
+                        NetworkConnectionType.sendTransport -> RTVINetworkConnectionType.sendTransport
+                    },
+                    event = when (status.event) {
+                        NetworkConnectionEventType.connected -> RTVINetworkConnectionEventType.connected
+                        NetworkConnectionEventType.interrupted -> RTVINetworkConnectionEventType.interrupted
+                    }
+                )
             )
         }
     }
@@ -496,5 +547,33 @@ class DailyTransport(
             return action(currentClient)
         }
     }
+}
+
+/**
+ * Extension function to convert Daily's DetailedNetworkStats to RTVIDetailedNetworkStats.
+ */
+private fun DetailedNetworkStats.toRtvi(): RTVIDetailedNetworkStats {
+    return RTVIDetailedNetworkStats(
+        latest = this.latest.toRtvi(),
+        worstVideoReceivePacketLoss = this.worstVideoReceivePacketLoss,
+        worstVideoSendPacketLoss = this.worstVideoSendPacketLoss
+    )
+}
+
+/**
+ * Extension function to convert Daily's LatestStatistics to RTVILatestStatistics.
+ */
+private fun LatestStats.toRtvi(): RTVILatestStatistics {
+    return RTVILatestStatistics(
+        receiveBitsPerSecond = this.receiveBitsPerSecond,
+        sendBitsPerSecond = this.sendBitsPerSecond,
+        timestamp = this.timestamp,
+        videoRecvBitsPerSecond = this.videoRecvBitsPerSecond,
+        videoSendBitsPerSecond = this.videoSendBitsPerSecond,
+        videoRecvPacketLoss = this.videoRecvPacketLoss,
+        videoSendPacketLoss = this.videoSendPacketLoss,
+        totalRecvPacketLoss = this.totalRecvPacketLoss,
+        totalSendPacketLoss = this.totalSendPacketLoss
+    )
 }
 
